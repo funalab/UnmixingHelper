@@ -76,8 +76,12 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
     private void generateMatrixTableModel(List<FluorInfo> fluorInfos) {
         Object[][] data = generateMatrixTableData(fluorInfos);
         String[] columns = new String[fluorInfos.size()];
+        int num = (int)'z' - (int)'a' + 1;
         for (int i = 0; i < fluorInfos.size(); i++) {
-            columns[i] = fluorInfos.get(i).getFluorName();
+            int ascii = (int)'a' + i % num;
+            char c = (char) ascii;
+            int idx = i / num;
+            columns[i] = c + String.valueOf(idx);
         }
         //create table model with data
         matrixModel = new DefaultTableModel(data, columns) {

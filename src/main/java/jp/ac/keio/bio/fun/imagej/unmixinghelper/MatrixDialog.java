@@ -3,6 +3,7 @@ package jp.ac.keio.bio.fun.imagej.unmixinghelper;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -16,7 +17,8 @@ public class MatrixDialog extends JDialog implements ActionListener {
         super();
         // Generate Matrix and JTable.
         matrixTable = new JTable(matrixModel);
-        // resizeColumnWidth(matrixTable);
+        JTableHeader header = matrixTable.getTableHeader();
+        header.setDefaultRenderer(new HeaderRenderer(matrixTable));
         JPanel matrixPanel = new JPanel();
         JScrollPane scrollPane = new JScrollPane(matrixTable, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         this.setBounds(700, 100, 450, 300);
@@ -44,7 +46,6 @@ public class MatrixDialog extends JDialog implements ActionListener {
             }
         }
         this.getContentPane().add(matrixPanel);
-        // resizeColumnWidth(matrixTable);
         List<String> rowNames = new ArrayList<>();
         for (FluorInfo f : fluorInfos) {
             rowNames.add(f.getFluorName());
