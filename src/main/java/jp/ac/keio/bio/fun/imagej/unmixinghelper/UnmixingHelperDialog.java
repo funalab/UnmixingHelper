@@ -1,6 +1,7 @@
 package jp.ac.keio.bio.fun.imagej.unmixinghelper;
 
 import net.imagej.DatasetService;
+import net.imagej.ImageJ;
 import net.imagej.ops.OpService;
 import org.scijava.app.StatusService;
 import org.scijava.log.LogService;
@@ -14,6 +15,7 @@ import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.List;
 
 public class UnmixingHelperDialog extends JDialog implements ActionListener {
@@ -191,13 +193,9 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
      * Launch the application.
      */
     public static void main(final String[] args) {
-        try {
-            final UnmixingHelperDialog dialog = new UnmixingHelperDialog(null);
-            dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-            dialog.setVisible(true);
-        } catch (final Exception e) {
-            e.printStackTrace();
-        }
+        // create the ImageJ application context with all available services
+        final ImageJ ij = new ImageJ();
+        ij.ui().showUI();
     }
 
 }
