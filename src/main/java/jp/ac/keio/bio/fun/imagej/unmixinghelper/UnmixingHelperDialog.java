@@ -129,7 +129,9 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
                 System.out.println("OK pressed!");
                 break;
             case "Cancel":
-                System.out.println("Cancel pressed!");
+                if (matrixDialog.isVisible())
+                    matrixDialog.dispose();
+                dispose();
                 break;
             case "Edit Matrix":
                 if (matrixTable == null) {
