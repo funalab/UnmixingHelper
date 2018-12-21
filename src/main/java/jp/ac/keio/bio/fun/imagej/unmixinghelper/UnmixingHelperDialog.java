@@ -14,7 +14,6 @@ import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.List;
 
 public class UnmixingHelperDialog extends JDialog implements ActionListener {
@@ -114,10 +113,7 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
             @Override
             public boolean isCellEditable(int row, int column) {
                 // "File Name", "Fluor Name", "Exposure Time (ms)", "BackGround"
-                if (column == 0) {
-                    return false;
-                }
-                return true;
+                return column != 0;
             }
             @Override
             public Class<?> getColumnClass(int columnIndex) {
@@ -158,61 +154,21 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         String action = e.getActionCommand();
-        if (action.equals("OK")) {
-            System.out.println("OK pressed!");
-        } else if (action.equals("Cancel")) {
-            System.out.println("Cancel pressed!");
-        } else if (action.equals("Edit Matrix")) {
-            System.out.println("Edit Matrix pressed!");
-            if (matrixTable == null) {
-                matrixDialog = new MatrixDialog(matrixModel, fluorInfos);
-                matrixTable = ((MatrixDialog) matrixDialog).getMatrixTable();
-            }
-            /*
-            if (matrixTable == null) {
-                // Generate Matrix and JTable.
-                matrixTable = new JTable(matrixModel);
-                resizeColumnWidth(matrixTable);
-                JPanel matrixPanel = new JPanel();
-                JScrollPane scrollPane = new JScrollPane(matrixTable, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-                matrixDialog.setBounds(700, 100, 450, 300);
-                matrixDialog.setLayout(new BorderLayout());
-                matrixPanel.setLayout(new BorderLayout());
-                matrixPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-                matrixPanel.add(scrollPane, BorderLayout.CENTER);
-                {
-                    JPanel buttonPane = new JPanel();
-                    // final JPanel buttonPane = new JPanel();
-                    buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
-                    matrixPanel.add(buttonPane, BorderLayout.SOUTH);
-                    {
-                        final JButton okButton = new JButton("OK");
-                        okButton.setActionCommand("OK");
-                        okButton.setEnabled(false);
-                        okButton.addActionListener(this);
-                        buttonPane.add(okButton);
-                        getRootPane().setDefaultButton(okButton);
-                    }
-                    {
-                        final JButton cancelButton = new JButton("Cancel");
-                        cancelButton.setActionCommand("Cancel");
-                        cancelButton.addActionListener(this);
-                        buttonPane.add(cancelButton);
-                    }
+        switch (action) {
+            case "OK":
+                System.out.println("OK pressed!");
+                break;
+            case "Cancel":
+                System.out.println("Cancel pressed!");
+                break;
+            case "Edit Matrix":
+                System.out.println("Edit Matrix pressed!");
+                if (matrixTable == null) {
+                    matrixDialog = new MatrixDialog(matrixModel, fluorInfos);
+                    matrixTable = ((MatrixDialog) matrixDialog).getMatrixTable();
                 }
-                matrixDialog.getContentPane().add(matrixPanel);
-                resizeColumnWidth(matrixTable);
-                List<String> rowNames = new ArrayList<>();
-                for (FluorInfo f : fluorInfos) {
-                    rowNames.add(f.getFluorName());
-                }
-                JTable rowTable = new RowNumberTable(matrixTable, rowNames);
-                scrollPane.setRowHeaderView(rowTable);
-                scrollPane.setCorner(JScrollPane.UPPER_LEFT_CORNER, rowTable.getTableHeader());
-                matrixDialog.pack();
-            }
-            */
-            matrixDialog.show();
+                matrixDialog.setVisible(true);
+                break;
         }
     }
 
