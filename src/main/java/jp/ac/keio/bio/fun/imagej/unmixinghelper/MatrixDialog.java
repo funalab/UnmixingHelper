@@ -5,17 +5,20 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MatrixDialog extends JDialog implements ActionListener {
     private JTable matrixTable;
+    private DefaultTableModel matrixModel;
+    private List<FluorInfo> fluorInfos;
 
-    public MatrixDialog(DefaultTableModel matrixModel, List<FluorInfo> fluorInfos) {
+    public MatrixDialog(List<FluorInfo> _fluorInfos) {
         super();
         // Generate Matrix and JTable.
+        fluorInfos = _fluorInfos;
+        generateMatrixTableModel(fluorInfos);
         matrixTable = new JTable(matrixModel);
         JTableHeader header = matrixTable.getTableHeader();
         header.setDefaultRenderer(new HeaderRenderer(matrixTable));
@@ -37,6 +40,7 @@ public class MatrixDialog extends JDialog implements ActionListener {
                 okButton.addActionListener(this);
                 buttonPane.add(okButton);
                 getRootPane().setDefaultButton(okButton);
+                matrixModel.addTableModelListener(e -> okButton.setEnabled(true));
             }
             {
                 final JButton cancelButton = new JButton("Cancel");
@@ -56,13 +60,56 @@ public class MatrixDialog extends JDialog implements ActionListener {
         this.pack();
     }
 
+    private void generateMatrixTableModel(List<FluorInfo> fluorInfos) {
+        Object[][] data = generateMatrixTableData(fluorInfos);
+        String[] columns = new String[fluorInfos.size()];
+        int num = (int) 'z' - (int) 'a' + 1;
+        for (int i = 0; i < fluorInfos.size(); i++) {
+            int ascii = (int) 'a' + i % num;
+            char c = (char) ascii;
+            int idx = i / num;
+            columns[i] = c + String.valueOf(idx);
+        }
+        //create table model with data
+        matrixModel = new DefaultTableModel(data, columns) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return true;
+            }
+
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                return Double.class;
+            }
+        };
+    }
+
+    private Object[][] generateMatrixTableData(List<FluorInfo> fluorInfos) {
+        int numColumns = fluorInfos.size();
+        Object[][] data = new Object[numColumns][numColumns];
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[0].length; j++) {
+                data[i][j] = 0d;
+            }
+        }
+        return data;
+    }
+
+    public void resetTable() {
+        generateMatrixTableModel(fluorInfos);
+        matrixTable.setModel(matrixModel);
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         String action = e.getActionCommand();
         if (action.equals("OK")) {
             System.out.println("OK pressed!");
+            dispose();
         } else if (action.equals("Cancel")) {
             System.out.println("Cancel pressed!");
+            resetTable();
+            dispose();
         }
     }
 

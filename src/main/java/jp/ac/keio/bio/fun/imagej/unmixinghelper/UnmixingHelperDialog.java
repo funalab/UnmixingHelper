@@ -14,6 +14,8 @@ import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.List;
 
 public class UnmixingHelperDialog extends JDialog implements ActionListener {
@@ -22,20 +24,19 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
     private LogService log;
     private StatusService statusService;
     private UIService uiService;
-    private String[] columns = new String[] {
+    private String[] columns = new String[]{
             "File Name", "Fluor Name", "Exposure Time (ms)", "Background"
     };
     private List<FluorInfo> fluorInfos;
-    private DefaultTableModel model, matrixModel;
+    private DefaultTableModel model;
 
     private final JPanel contentPanel = new JPanel();
-    private JDialog matrixDialog; // = new JDialog();
+    private MatrixDialog matrixDialog;
     private JTable matrixTable;
 
     public UnmixingHelperDialog(List<FluorInfo> _fluorInfos) {
         fluorInfos = _fluorInfos;
         generateUITableModel(fluorInfos);
-        generateMatrixTableModel(fluorInfos);
         setBounds(100, 100, 450, 300);
         getContentPane().setLayout(new BorderLayout());
         contentPanel.setLayout(new FlowLayout());
@@ -73,43 +74,9 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
         }
     }
 
-    private void generateMatrixTableModel(List<FluorInfo> fluorInfos) {
-        Object[][] data = generateMatrixTableData(fluorInfos);
-        String[] columns = new String[fluorInfos.size()];
-        int num = (int)'z' - (int)'a' + 1;
-        for (int i = 0; i < fluorInfos.size(); i++) {
-            int ascii = (int)'a' + i % num;
-            char c = (char) ascii;
-            int idx = i / num;
-            columns[i] = c + String.valueOf(idx);
-        }
-        //create table model with data
-        matrixModel = new DefaultTableModel(data, columns) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return true;
-            }
-            @Override
-            public Class<?> getColumnClass(int columnIndex) {
-                return Double.class;
-            }
-        };
-    }
-
-    private Object[][] generateMatrixTableData(List<FluorInfo> fluorInfos) {
-        int numColumns = fluorInfos.size();
-        Object[][] data = new Object[numColumns][numColumns];
-        for (int i = 0; i < data.length; i++) {
-            for (int j = 0; j < data[0].length; j++) {
-                data[i][j] = 0d;
-            }
-        }
-        return data;
-    }
-
     private void generateUITableModel(List<FluorInfo> fluorInfos) {
         Object[][] data = generateUITableData(fluorInfos);
-        final Class[] columnClass = new Class[] {
+        final Class[] columnClass = new Class[]{
                 String.class, String.class, Double.class, Double.class
         };
         //create table model with data
@@ -119,6 +86,7 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
                 // "File Name", "Fluor Name", "Exposure Time (ms)", "BackGround"
                 return column != 0;
             }
+
             @Override
             public Class<?> getColumnClass(int columnIndex) {
                 return columnClass[columnIndex];
@@ -146,10 +114,10 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
             for (int row = 0; row < table.getRowCount(); row++) {
                 TableCellRenderer renderer = table.getCellRenderer(row, column);
                 Component comp = table.prepareRenderer(renderer, row, column);
-                width = Math.max(comp.getPreferredSize().width +1 , width);
+                width = Math.max(comp.getPreferredSize().width + 1, width);
             }
-            if(width > 300) {
-                width=300;
+            if (width > 300) {
+                width = 300;
             }
             columnModel.getColumn(column).setPreferredWidth(width);
         }
@@ -168,8 +136,13 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
             case "Edit Matrix":
                 System.out.println("Edit Matrix pressed!");
                 if (matrixTable == null) {
-                    matrixDialog = new MatrixDialog(matrixModel, fluorInfos);
-                    matrixTable = ((MatrixDialog) matrixDialog).getMatrixTable();
+                    matrixDialog = new MatrixDialog(fluorInfos);
+                    matrixDialog.addWindowListener(new WindowAdapter() {
+                        public void windowClosing(WindowEvent e) {
+                            matrixDialog.resetTable();
+                        }
+                    });
+                    matrixTable = matrixDialog.getMatrixTable();
                 }
                 matrixDialog.setVisible(true);
                 break;
@@ -228,8 +201,7 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
             final UnmixingHelperDialog dialog = new UnmixingHelperDialog(null);
             dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
             dialog.setVisible(true);
-        }
-        catch (final Exception e) {
+        } catch (final Exception e) {
             e.printStackTrace();
         }
     }
