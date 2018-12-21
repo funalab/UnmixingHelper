@@ -20,7 +20,6 @@ import org.scijava.command.Previewable;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.table.*;
 import org.scijava.ui.UIService;
 
 import javax.swing.*;
