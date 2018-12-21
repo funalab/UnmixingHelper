@@ -108,8 +108,6 @@ public class UnmixingHelper<T extends RealType<T>> implements Command, Previewab
 
         fluorInfos.sort(Comparator.comparing(FluorInfo::getFluorName));
         fluorInfos.forEach(System.out::println);
-        GenericTable table = createTable();
-        uiService.show("Unmixing Helper", table);
 
         SwingUtilities.invokeLater(() -> {
             if (dialog == null) {
@@ -122,29 +120,6 @@ public class UnmixingHelper<T extends RealType<T>> implements Command, Previewab
             dialog.setStatusService(statusService);
             dialog.setUiService(uiService);
         });
-    }
-
-    private GenericTable createTable() {
-        GenericColumn channelColumn = new GenericColumn("Channel");
-        GenericColumn fluoColumn = new GenericColumn("Fluo");
-        DoubleColumn backgroundColumn = new DoubleColumn("bg");
-        DoubleColumn exposureColumn = new DoubleColumn("exposure time (ms)");
-
-        for (FluorInfo fi : fluorInfos) {
-            channelColumn.add(fi.getFileName());
-            fluoColumn.add(fi.getFluorName());
-            exposureColumn.add(fi.getExposureTime());
-            backgroundColumn.add(0d);
-        }
-
-        GenericTable table = new DefaultGenericTable();
-
-        table.add(channelColumn);
-        table.add(fluoColumn);
-        table.add(exposureColumn);
-        table.add(backgroundColumn);
-
-        return table;
     }
 
     /**

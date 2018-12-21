@@ -14,8 +14,6 @@ import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.List;
 
 public class UnmixingHelperDialog extends JDialog implements ActionListener {
@@ -134,14 +132,8 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
                 System.out.println("Cancel pressed!");
                 break;
             case "Edit Matrix":
-                System.out.println("Edit Matrix pressed!");
                 if (matrixTable == null) {
                     matrixDialog = new MatrixDialog(fluorInfos);
-                    matrixDialog.addWindowListener(new WindowAdapter() {
-                        public void windowClosing(WindowEvent e) {
-                            matrixDialog.resetTable();
-                        }
-                    });
                     matrixTable = matrixDialog.getMatrixTable();
                 }
                 matrixDialog.setVisible(true);

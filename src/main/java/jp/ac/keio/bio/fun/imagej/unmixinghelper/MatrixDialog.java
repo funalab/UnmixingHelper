@@ -42,12 +42,6 @@ public class MatrixDialog extends JDialog implements ActionListener {
                 getRootPane().setDefaultButton(okButton);
                 matrixModel.addTableModelListener(e -> okButton.setEnabled(true));
             }
-            {
-                final JButton cancelButton = new JButton("Cancel");
-                cancelButton.setActionCommand("Cancel");
-                cancelButton.addActionListener(this);
-                buttonPane.add(cancelButton);
-            }
         }
         this.getContentPane().add(matrixPanel);
         List<String> rowNames = new ArrayList<>();
@@ -104,11 +98,6 @@ public class MatrixDialog extends JDialog implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         String action = e.getActionCommand();
         if (action.equals("OK")) {
-            System.out.println("OK pressed!");
-            dispose();
-        } else if (action.equals("Cancel")) {
-            System.out.println("Cancel pressed!");
-            resetTable();
             dispose();
         }
     }
