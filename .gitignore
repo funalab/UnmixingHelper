@@ -14,6 +14,9 @@ hs_err_pid*
 # from MacOSX
 .DS_Store
 
+# example images
+*.tif
+
 # GDB
 .gdb_history
 
