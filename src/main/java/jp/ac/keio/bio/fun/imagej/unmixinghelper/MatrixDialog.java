@@ -12,9 +12,13 @@ import java.awt.dnd.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 
 /**
  * @author Akira Funahashi
@@ -88,6 +92,24 @@ public class MatrixDialog extends JDialog implements ActionListener {
                 dtde.rejectDrag();
             }
 
+            private String getSeparator(File file) {
+                String extension = "";
+                String separator = "\\s+|\\t+";
+                int i = file.getName().lastIndexOf('.');
+                if (i > 0) {
+                    extension = file.getName().substring(i + 1);
+                }
+                switch (extension) {
+                    case "csv":
+                    case "CSV":
+                        separator = ",";
+                        break;
+                    default:
+                        break;
+                }
+                return separator;
+            }
+
             @Override
             public void drop(DropTargetDropEvent dtde) {
                 try {
@@ -98,7 +120,31 @@ public class MatrixDialog extends JDialog implements ActionListener {
                         for (Object o : list) {
                             if (o instanceof File) {
                                 File file = (File) o;
+                                String separator = getSeparator(file);
                                 System.out.println(file.getAbsolutePath());
+                                Scanner inputStream;
+
+                                try {
+                                    inputStream = new Scanner(file);
+                                    inputStream.useDelimiter(System.lineSeparator());
+                                    int row = 0;
+                                    while (inputStream.hasNext()) {
+                                        int column = 0;
+                                        String line = inputStream.next();
+                                        double[] values = Arrays.stream(line.split(separator))
+                                                .mapToDouble(Double::parseDouble)
+                                                .toArray();
+                                        for (double d : values) {
+                                            matrixModel.setValueAt(d, row, column);
+                                            column++;
+                                        }
+                                        row++;
+                                    }
+                                    inputStream.close();
+                                    break;
+                                } catch (FileNotFoundException e) {
+                                    e.printStackTrace();
+                                }
                             }
                         }
                         dtde.dropComplete(true);
@@ -163,5 +209,27 @@ public class MatrixDialog extends JDialog implements ActionListener {
 
     public JTable getMatrixTable() {
         return matrixTable;
+    }
+
+    public static void main(final String[] args) {
+        File file = new File("/Users/funa/Downloads/matrix.txt");
+        Scanner inputStream;
+        String separator = "\\s+|\\t+";
+        try {
+            inputStream = new Scanner(file);
+            inputStream.useDelimiter(System.lineSeparator());
+            while (inputStream.hasNext()) {
+                String line = inputStream.next();
+                System.out.println(line);
+                double[] values = Arrays.stream(line.split(separator)).mapToDouble(Double::parseDouble).toArray();
+                for (double d : values) {
+                    System.out.print(d + ", ");
+                }
+                System.out.println();
+            }
+            inputStream.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 }
