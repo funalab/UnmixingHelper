@@ -1,5 +1,6 @@
 package jp.ac.keio.bio.fun.imagej.unmixinghelper;
 
+import Jama.Matrix;
 import ij.io.SaveDialog;
 import jp.ac.keio.bio.fun.imagej.unmixinghelper.util.StringUtil;
 import net.imagej.DatasetService;
@@ -11,12 +12,23 @@ import org.scijava.ui.UIService;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,18 +39,20 @@ import java.util.List;
  * Akira Funahashi ported the python code to Java, and made it as an ImageJ plugin.
  * </p>
  */
-public class UnmixingHelperDialog extends JDialog implements ActionListener {
+public class UnmixingHelperDialog extends JDialog implements ActionListener, TableModelListener {
     private DatasetService datasetService;
     private OpService opService;
     private LogService log;
     private StatusService statusService;
     private UIService uiService;
-    private String[] columns = new String[]{
+    private static final String[] columns = new String[]{
             "File Name", "Fluor Name", "Exposure Time (ms)", "Background"
     };
     private List<FluorInfo> fluorInfos;
-    private DefaultTableModel model;
     private String outputFilename;
+    private boolean use_exposure_time_ratio;
+    private boolean do_normalization;
+    private DefaultTableModel model;
 
     private final JPanel contentPanel = new JPanel();
     private MatrixDialog matrixDialog;
@@ -47,11 +61,13 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
 
     public UnmixingHelperDialog(List<FluorInfo> _fluorInfos) {
         fluorInfos = _fluorInfos;
+        use_exposure_time_ratio = true;
+        do_normalization = true;
         String commonName = StringUtil.getCommonSubstring(fluorInfos);
         if (commonName.length() < 3) {
             outputFilename = "matrix";
         } else {
-            outputFilename = commonName + "_matrix";
+            outputFilename = (commonName + "_matrix").replaceAll("_+", "_");
         }
         generateUITableModel(fluorInfos);
         setBounds(100, 100, 450, 300);
@@ -64,6 +80,7 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
             resizeColumnWidth(table);
             getContentPane().add(new JScrollPane(table));
             resizeColumnWidth(table);
+            table.getModel().addTableModelListener(this);
 
             final JPanel buttonPane = new JPanel();
             buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
@@ -73,6 +90,7 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
                 matrixButton.setActionCommand("Edit Matrix");
                 matrixButton.addActionListener(this);
                 buttonPane.add(matrixButton);
+                getRootPane().setDefaultButton(matrixButton);
             }
             {
                 saveButton = new JButton("Save");
@@ -80,7 +98,6 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
                 saveButton.setEnabled(false);
                 saveButton.addActionListener(this);
                 buttonPane.add(saveButton);
-                getRootPane().setDefaultButton(saveButton);
             }
             {
                 final JButton cancelButton = new JButton("Cancel");
@@ -140,12 +157,119 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
         }
     }
 
+    private void writeMatrix(String outputFile) {
+        List<String> buf = new ArrayList<>();
+
+        // Write configuration
+        buf.add("Channels\t" + fluorInfos.size());
+        buf.add("Fluors\t" + fluorInfos.size());
+        buf.add("MixingMatrixValid\tyes");
+        buf.add("UnmixingMatrixValid\tyes\n");
+
+        // Write Channel Name
+        StringBuilder chName = new StringBuilder("ChannelNames");
+        for (FluorInfo fi : fluorInfos) {
+            chName.append("\t").append(fi.getFileName());
+        }
+        buf.add(chName.toString());
+
+        // Write Fluor Name
+        StringBuilder flName = new StringBuilder("FluorNames");
+        for (FluorInfo fi : fluorInfos) {
+            flName.append("\t").append(fi.getFluorName());
+        }
+        buf.add(flName + "\n");
+
+        // Write Measurement Background
+        for (int i = 0; i < fluorInfos.size(); i++) {
+            buf.add("MeasurementBackground\t" + i + "\t" + fluorInfos.get(i).getBackGround());
+        }
+        buf.add("\n");
+
+        // Make Matrix
+        Matrix matrix = new Matrix(getTableData(matrixTable));
+
+        // Write Mixing Matrix
+        matrix = matrix.transpose();
+        if (do_normalization) {
+            normalize(matrix);
+        }
+        writeMatrixToBuffer(buf, matrix, "MixingMatrixFluor");
+
+        // Write Unmixing Matrix
+        Matrix inv_matrix = matrix.transpose().inverse();
+        writeMatrixToBuffer(buf, inv_matrix, "UnmixingMatrixFluor");
+
+        // Write buffer to file
+        Path outfilePath = Paths.get(outputFile);
+        if (Files.notExists(outfilePath, LinkOption.NOFOLLOW_LINKS)) {
+            try {
+                Files.createDirectories(outfilePath.getParent());
+                Files.createFile(outfilePath);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        try {
+            Files.write(Paths.get(outputFile), buf, Charset.forName("UTF-8"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void writeMatrixToBuffer(List<String> buf, Matrix matrix, String title) {
+        StringBuilder mixmatName;
+        for (int i = 0; i < fluorInfos.size(); i++) {
+            mixmatName = new StringBuilder(title + "\t" + i);
+            for (int j = 0; j < fluorInfos.size(); j++) {
+                mixmatName.append("\t").append(String.format("%.16f", matrix.get(i, j)));
+            }
+            buf.add(mixmatName.toString());
+        }
+        buf.add("");
+    }
+
+    /**
+     * @param vector raw of 2D matrix
+     * @return sum of raw
+     */
+    private double sum(double[] vector) {
+        double sum = 0.0;
+        for (double v : vector) {
+            sum += v;
+        }
+        return sum;
+    }
+
+    private void normalize(Matrix matrix) {
+        double[][] tmpArray = matrix.getArray();
+        for (int i = 0; i < tmpArray.length; i++) {
+            double sum = sum(tmpArray[i]);
+            for (int j = 0; j < tmpArray[0].length; j++) {
+                tmpArray[i][j] = tmpArray[i][j] / sum;
+            }
+        }
+    }
+
+    public double[][] getTableData(JTable table) {
+        DefaultTableModel dtm = (DefaultTableModel) table.getModel();
+        int nRow = dtm.getRowCount(), nCol = dtm.getColumnCount();
+        double[][] tableData = new double[nRow][nCol];
+        for (int i = 0; i < nRow; i++)
+            for (int j = 0; j < nCol; j++)
+                tableData[i][j] = (double) dtm.getValueAt(i, j);
+        return tableData;
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         String action = e.getActionCommand();
         switch (action) {
             case "Save":
                 SaveDialog sd = new SaveDialog("Save Matrix", outputFilename, ".txt");
+                System.out.println(sd.getDirectory() + sd.getFileName());
+                writeMatrix(sd.getDirectory() + sd.getFileName());
                 break;
             case "Cancel":
                 if (matrixDialog.isVisible())
@@ -162,6 +286,23 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
                 }
                 matrixDialog.setVisible(true);
                 break;
+        }
+    }
+
+    @Override
+    public void tableChanged(TableModelEvent e) {
+        int row = e.getFirstRow();
+        int column = e.getColumn();
+        DefaultTableModel model = (DefaultTableModel) e.getSource();
+        String columnName = model.getColumnName(column);
+        Object data = model.getValueAt(row, column);
+        // System.out.println("Changed: " + columnName + " : " + row + " to: " + data);
+        if (columnName.equals(columns[1])) {                // "Fluor Name"
+            fluorInfos.get(row).setFluorName((String)data);
+        } else if (columnName.equals(columns[2])) {         // "Exposure Time (ms)"
+            fluorInfos.get(row).setExposureTime((Double) data);
+        } else if (columnName.equals(columns[3])) {         // "Background"
+            fluorInfos.get(row).setBackGround((Double) data);
         }
     }
 

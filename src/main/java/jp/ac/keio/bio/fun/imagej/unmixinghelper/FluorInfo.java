@@ -56,12 +56,16 @@ public class FluorInfo {
         return 0d;
     }
 
+    public String getFileName() {
+        return fileName;
+    }
+
     public String getFluorName() {
         return fluorName;
     }
 
-    public String getFileName() {
-        return fileName;
+    public void setFluorName(String fluorName) {
+        this.fluorName = fluorName;
     }
 
     public double getBackGround() {
@@ -74,6 +78,10 @@ public class FluorInfo {
 
     public double getExposureTime() {
         return exposureTime;
+    }
+
+    public void setExposureTime(double exposureTime) {
+        this.exposureTime = exposureTime;
     }
 
     @Override
