@@ -1,5 +1,7 @@
 package jp.ac.keio.bio.fun.imagej.unmixinghelper;
 
+import ij.io.SaveDialog;
+import jp.ac.keio.bio.fun.imagej.unmixinghelper.util.StringUtil;
 import net.imagej.DatasetService;
 import net.imagej.ImageJ;
 import net.imagej.ops.OpService;
@@ -17,6 +19,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
+/**
+ * @author Akira Funahashi
+ * @author Yuta Tokuoka
+ * <p>
+ * Yuta Tokuoka implemented a python code which generates matrix data.
+ * Akira Funahashi ported the python code to Java, and made it as an ImageJ plugin.
+ * </p>
+ */
 public class UnmixingHelperDialog extends JDialog implements ActionListener {
     private DatasetService datasetService;
     private OpService opService;
@@ -28,13 +38,21 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
     };
     private List<FluorInfo> fluorInfos;
     private DefaultTableModel model;
+    private String outputFilename;
 
     private final JPanel contentPanel = new JPanel();
     private MatrixDialog matrixDialog;
     private JTable matrixTable;
+    private JButton saveButton;
 
     public UnmixingHelperDialog(List<FluorInfo> _fluorInfos) {
         fluorInfos = _fluorInfos;
+        String commonName = StringUtil.getCommonSubstring(fluorInfos);
+        if (commonName.length() < 3) {
+            outputFilename = "matrix";
+        } else {
+            outputFilename = commonName + "_matrix";
+        }
         generateUITableModel(fluorInfos);
         setBounds(100, 100, 450, 300);
         getContentPane().setLayout(new BorderLayout());
@@ -57,12 +75,12 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
                 buttonPane.add(matrixButton);
             }
             {
-                final JButton okButton = new JButton("OK");
-                okButton.setActionCommand("OK");
-                okButton.setEnabled(false);
-                okButton.addActionListener(this);
-                buttonPane.add(okButton);
-                getRootPane().setDefaultButton(okButton);
+                saveButton = new JButton("Save");
+                saveButton.setActionCommand("Save");
+                saveButton.setEnabled(false);
+                saveButton.addActionListener(this);
+                buttonPane.add(saveButton);
+                getRootPane().setDefaultButton(saveButton);
             }
             {
                 final JButton cancelButton = new JButton("Cancel");
@@ -126,18 +144,21 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         String action = e.getActionCommand();
         switch (action) {
-            case "OK":
-                System.out.println("OK pressed!");
+            case "Save":
+                SaveDialog sd = new SaveDialog("Save Matrix", outputFilename, ".txt");
                 break;
             case "Cancel":
                 if (matrixDialog.isVisible())
                     matrixDialog.dispose();
+                matrixTable = null;
+                saveButton.setEnabled(false);
                 dispose();
                 break;
             case "Edit Matrix":
                 if (matrixTable == null) {
                     matrixDialog = new MatrixDialog(fluorInfos);
                     matrixTable = matrixDialog.getMatrixTable();
+                    saveButton.setEnabled(true);
                 }
                 matrixDialog.setVisible(true);
                 break;
@@ -186,6 +207,14 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener {
 
     public JPanel getContentPanel() {
         return contentPanel;
+    }
+
+    public String getOutputFilename() {
+        return outputFilename;
+    }
+
+    public void setOutputFilename(String outputFilename) {
+        this.outputFilename = outputFilename;
     }
 
     /**

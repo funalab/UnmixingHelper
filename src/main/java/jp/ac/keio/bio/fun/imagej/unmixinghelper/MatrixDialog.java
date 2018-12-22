@@ -9,6 +9,14 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author Akira Funahashi
+ * @author Yuta Tokuoka
+ * <p>
+ * Yuta Tokuoka implemented a python code which generates matrix data.
+ * Akira Funahashi ported the python code to Java, and made it as an ImageJ plugin.
+ * </p>
+ */
 public class MatrixDialog extends JDialog implements ActionListener {
     private JTable matrixTable;
     private DefaultTableModel matrixModel;

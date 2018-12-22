@@ -3,6 +3,14 @@ package jp.ac.keio.bio.fun.imagej.unmixinghelper;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * @author Akira Funahashi
+ * @author Yuta Tokuoka
+ * <p>
+ * Yuta Tokuoka implemented a python code which generates matrix data.
+ * Akira Funahashi ported the python code to Java, and made it as an ImageJ plugin.
+ * </p>
+ */
 public class FluorInfo {
     private String fluorName;
     private String fileName;
