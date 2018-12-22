@@ -266,8 +266,10 @@ public class UnmixingHelperDialog extends JDialog implements ActionListener, Tab
         switch (action) {
             case "Save":
                 SaveDialog sd = new SaveDialog("Save Matrix", outputFilename, ".txt");
-                System.out.println(sd.getDirectory() + sd.getFileName());
-                writeMatrix(sd.getDirectory() + sd.getFileName());
+                if (sd.getFileName() != null && sd.getDirectory() != null) {
+                    System.out.println(sd.getDirectory() + sd.getFileName());
+                    writeMatrix(sd.getDirectory() + sd.getFileName());
+                }
                 break;
             case "Cancel":
                 if (matrixDialog.isVisible())
