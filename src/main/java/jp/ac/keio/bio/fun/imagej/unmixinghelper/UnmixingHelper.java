@@ -8,7 +8,6 @@
 
 package jp.ac.keio.bio.fun.imagej.unmixinghelper;
 
-import Jama.Matrix;
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
 import net.imagej.ImageJ;
@@ -27,7 +26,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * @author Akira Funahashi
