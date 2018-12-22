@@ -5,8 +5,14 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,8 +35,11 @@ public class MatrixDialog extends JDialog implements ActionListener {
         fluorInfos = _fluorInfos;
         generateMatrixTableModel(fluorInfos);
         matrixTable = new JTable(matrixModel);
+
         JTableHeader header = matrixTable.getTableHeader();
         header.setDefaultRenderer(new HeaderRenderer(matrixTable));
+
+        // Panel and ScrollPane
         JPanel matrixPanel = new JPanel();
         JScrollPane scrollPane = new JScrollPane(matrixTable, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         this.setBounds(700, 100, 450, 300);
@@ -53,6 +62,11 @@ public class MatrixDialog extends JDialog implements ActionListener {
             }
         }
         this.getContentPane().add(matrixPanel);
+
+        DropTargetListener dtl = generateDragTargetListener();
+        new DropTarget(matrixPanel, DnDConstants.ACTION_COPY, dtl, true);
+
+        // Row Table
         List<String> rowNames = new ArrayList<>();
         for (FluorInfo f : fluorInfos) {
             rowNames.add(f.getFluorName());
@@ -61,6 +75,42 @@ public class MatrixDialog extends JDialog implements ActionListener {
         scrollPane.setRowHeaderView(rowTable);
         scrollPane.setCorner(JScrollPane.UPPER_LEFT_CORNER, rowTable.getTableHeader());
         this.pack();
+    }
+
+    private DropTargetListener generateDragTargetListener() {
+        DropTargetListener dtl = new DropTargetAdapter() {
+            @Override
+            public void dragOver(DropTargetDragEvent dtde) {
+                if (dtde.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+                    dtde.acceptDrag(DnDConstants.ACTION_COPY);
+                    return;
+                }
+                dtde.rejectDrag();
+            }
+
+            @Override
+            public void drop(DropTargetDropEvent dtde) {
+                try {
+                    if (dtde.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+                        dtde.acceptDrop(DnDConstants.ACTION_COPY);
+                        Transferable transferable = dtde.getTransferable();
+                        List<?> list = (List<?>) transferable.getTransferData(DataFlavor.javaFileListFlavor);
+                        for (Object o : list) {
+                            if (o instanceof File) {
+                                File file = (File) o;
+                                System.out.println(file.getAbsolutePath());
+                            }
+                        }
+                        dtde.dropComplete(true);
+                        return;
+                    }
+                } catch (UnsupportedFlavorException | IOException ex) {
+                    ex.printStackTrace();
+                }
+                dtde.rejectDrop();
+            }
+        };
+        return dtl;
     }
 
     private void generateMatrixTableModel(List<FluorInfo> fluorInfos) {
