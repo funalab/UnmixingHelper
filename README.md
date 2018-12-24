@@ -17,13 +17,14 @@ mvn
 1. Prepare 6 image files and place it in this directory.
 2. Modify following lines in `src/main/java/jp/ac/keio/bio/fun/imagej/unmixinghelper/UnmixingHelper.java`
     ```java
-    ArrayList<File> fl = new ArrayList<>();
-        final File file1 = new File("CFP_30ms.tif");
-        final File file2 = new File("GFP_50ms.tif");
-        final File file3 = new File("Orange_30ms.tif");
-        final File file4 = new File("Cherry_30ms.tif");
-        final File file5 = new File("Keima_10ms.tif");
-        final File file6 = new File("YFP_50ms.tif");
+    String[] testfile = {
+        "06GRCOC_CFP_5ms.tif",
+        "06GRCOC_GFP_5ms.tif",
+        "06GRCOC_Orange_5ms.tif",
+        "06GRCOC_Cherry_5ms.tif",
+        "06GRCOC_Keima_2.5ms.tif",
+        "06GRCOC_YFP_5ms.tif",
+    };
     ```
     to fit with your image files (just change the filenames in the code).
 3. Launch ImageJ and execute the plugin by the following command.

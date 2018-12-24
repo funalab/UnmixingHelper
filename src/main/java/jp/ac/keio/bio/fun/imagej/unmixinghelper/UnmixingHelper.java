@@ -161,9 +161,13 @@ public class UnmixingHelper<T extends RealType<T>> implements Command, Previewab
                 "Orange_30ms.tif", "Cherry_30ms.tif",
                 "Keima_10ms.tif", "YFP_50ms.tif",
         };
-        String[] testfile = {"06GRCOC_CFP_5ms.tif", "06GRCOC_GFP_5ms.tif",
-                "06GRCOC_Orange_5ms.tif", "06GRCOC_Cherry_5ms.tif",
-                "06GRCOC_Keima_2.5ms.tif", "06GRCOC_YFP_5ms.tif",
+        String[] testfile = {
+                "06GRCOC_CFP_5ms.tif",
+                "06GRCOC_GFP_5ms.tif",
+                "06GRCOC_Orange_5ms.tif",
+                "06GRCOC_Cherry_5ms.tif",
+                "06GRCOC_Keima_2.5ms.tif",
+                "06GRCOC_YFP_5ms.tif",
         };
 
         ArrayList<File> fl = new ArrayList<>();
