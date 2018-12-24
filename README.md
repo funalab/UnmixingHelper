@@ -15,7 +15,7 @@ mvn
 
 ## How to try (batch mode)
 1. Prepare 6 image files and place it in this directory.
-2. Modify following lines in [`src/main/java/jp/ac/keio/bio/fun/imagej/unmixinghelper/UnmixingHelper.java`](https://github.com/funalab/UnmixingHelper/blob/master/src/main/java/jp/ac/keio/bio/fun/imagej/unmixinghelper/UnmixingHelper.java)
+2. Modify following lines in [`src/main/java/jp/ac/keio/bio/fun/imagej/unmixinghelper/UnmixingHelper.java`](https://github.com/funalab/UnmixingHelper/blob/1d79d5828bccbedab4f95bd836b778dfc3bbb728/src/main/java/jp/ac/keio/bio/fun/imagej/unmixinghelper/UnmixingHelper.java#L164-L171)
     ```java
     String[] testfile = {
         "06GRCOC_CFP_5ms.tif",
